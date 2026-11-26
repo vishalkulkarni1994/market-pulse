@@ -1,10 +1,10 @@
 # market-pulse
 
-Hourly email alerts for Indian market-moving news. It reads Business Standard RSS feeds, scores each new article with an LLM, and emails a digest when something is high priority.
+Hourly email alerts for Indian market-moving news. It reads Times of India RSS feeds, scores each new article with an LLM, and emails a digest when something is high priority.
 
 Status: project skeleton. The configuration, database schema and URL normalisation work and have tests. The feed fetcher, database queries, AI scorer, digest builder and real email sender are stubs that throw `not implemented`.
 
-See [ARCHITECTURE.md](ARCHITECTURE.md) for the design and the diagram.
+See [ARCHITECTURE.md](ARCHITECTURE.md) for the design and the diagram. New to Node.js? Read [docs/PROJECT_GUIDE.md](docs/PROJECT_GUIDE.md) for a tour of the project structure.
 
 ## Quick start
 
@@ -45,7 +45,13 @@ market-pulse/
 └── .env.example           configuration template
 ```
 
+## Monetisation
+
+The plan for turning this into a paid product is in [docs/MONETISATION_PLAN.md](docs/MONETISATION_PLAN.md). The TOI feeds in this repo are for personal use only and must not be used for a paid product.
+
 ## Implementation order
+
+The full phase-by-phase plan with checklists is in [docs/IMPLEMENTATION_PLAN.md](docs/IMPLEMENTATION_PLAN.md). In short:
 
 1. `feed`: download and parse the feeds, use `normalizeUrl` on every link.
 2. `store`: the seven queries; each has a TODO describing what it should do.

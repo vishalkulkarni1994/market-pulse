@@ -2,7 +2,7 @@
 
 Status: design draft for v1 (5 Oct 2026). No code yet.
 
-market-pulse watches Business Standard for Indian economy and market news that is likely to move the Sensex or Nifty, scores each new article with an LLM, and emails a short digest every hour, but only when something is high priority.
+market-pulse watches Times of India RSS feeds for Indian economy and market news that is likely to move the Sensex or Nifty, scores each new article with an LLM, and emails a short digest every hour, but only when something is high priority.
 
 ![market-pulse architecture](docs/architecture.svg)
 
@@ -48,24 +48,32 @@ If step 5 finds nothing, no email is sent.
 
 ## Data sources
 
-Business Standard publishes official RSS feeds. These were listed on its RSS page on 5 Oct 2026. I have not yet confirmed that each one returns fresh items.
+v1 reads the Times of India (TOI) RSS feeds. All four feeds below returned fresh items on 5 Oct 2026.
 
-| Feed | URL |
-|---|---|
-| Economy | `https://www.business-standard.com/rss/economy-102.rss` |
-| Markets | `https://www.business-standard.com/rss/markets-106.rss` |
-| Stock market news | `https://www.business-standard.com/rss/markets/stock-market-news-10618.rss` |
-| Finance | `https://www.business-standard.com/rss/finance-103.rss` |
-| Top stories | `https://www.business-standard.com/rss/home_page_top_stories.rss` |
-| Latest | `https://www.business-standard.com/rss/latest.rss` |
+| Feed | URL | Used by default |
+|---|---|---|
+| Business | `https://timesofindia.indiatimes.com/business/rssfeeds/1898055.cms` | yes |
+| Top stories | `https://timesofindia.indiatimes.com/rssfeedstopstories.cms` | yes |
+| India | `https://timesofindia.indiatimes.com/india/rssfeeds/-2128936835.cms` | no |
+| Most recent | `https://timesofindia.indiatimes.com/rssfeedmostrecent.cms` | no |
 
-Suggested starting set: Economy, Markets and Top stories.
+Why TOI and not Business Standard: Business Standard's terms of use prohibit automated access and any use of its content with AI systems without written consent. TOI's RSS page grants permission "to only access and make personal use of its RSS feeds", forbids copying, publishing, distributing or commercial use, and says not to keep copies except for personal use. It does not mention AI. This is a plain reading of the terms, not legal advice. See [docs/IMPLEMENTATION_PLAN.md](docs/IMPLEMENTATION_PLAN.md), Phase 0, for the details.
 
-The site's `robots.txt` does not restrict the economy, markets or RSS paths. The RSS page states no reuse terms, so read the site's terms and conditions before relying on it. To keep the footprint small, store only the headline, link, publish time and your own AI summary, never the full article text, and link back to the original in the email.
+To stay within personal use, store only the headline, link, publish time, a short description and your own AI summary, never full article text. Send the digest only to yourself and link back to the original.
+
+TOI is a general newspaper, so its business feed carries less market-specific news than a markets-only feed. The LLM priority score is what filters it.
+
+### Feed format notes
+
+- Links, titles and descriptions are wrapped in CDATA.
+- Descriptions can start with an escaped `<img>` tag; strip HTML before storing or scoring.
+- The first `<link>` in a feed is the channel link, not an article.
+- Dates appear as ISO 8601 in some feeds and RFC 822 in others; the parser must accept both.
+- Article URLs look like `.../articleshow/134701115.cms`.
 
 ### URL normalisation
 
-The same article can appear under several URLs, for example an AMP version. Before the duplicate check:
+The same article can appear under several URLs. Before the duplicate check:
 
 1. Lowercase the host.
 2. Remove a leading `/amp` path segment.
@@ -75,8 +83,8 @@ The same article can appear under several URLs, for example an AMP version. Befo
 Example:
 
 ```text
-https://www.business-standard.com/amp/economy/news/india-us-have-reached-a-plateau-in-trade-talks-says-fm-nirmala-sitharaman-126100500184_1.html
--> https://www.business-standard.com/economy/news/india-us-have-reached-a-plateau-in-trade-talks-says-fm-nirmala-sitharaman-126100500184_1.html
+https://timesofindia.indiatimes.com/business/india-business/some-story/articleshow/134701115.cms?from=mdr#top
+-> https://timesofindia.indiatimes.com/business/india-business/some-story/articleshow/134701115.cms
 ```
 
 ## Data model
@@ -182,7 +190,7 @@ Proposed environment variables:
 | Variable | Purpose | Default |
 |---|---|---|
 | `DATABASE_URL` | Postgres connection string | none |
-| `FEED_URLS` | Comma-separated feed list | Economy, Markets, Top stories |
+| `FEED_URLS` | Comma-separated feed list | TOI Business, Top stories |
 | `LLM_API_KEY` | Key for the scoring model | none |
 | `LLM_MODEL` | Model used for scoring | choose a small, cheap model |
 | `PRIORITY_THRESHOLD` | Minimum priority to email | `4` |
@@ -199,7 +207,7 @@ Keep secrets out of the repository. Commit a `.env.example` with placeholder val
 - Where does Postgres live? A local container for development; a free-tier hosted instance if the job runs in the cloud.
 - Which email provider? Any SMTP account or a transactional email API would work.
 - Which model and what does an hour of scoring cost? Measure after the first real run.
-- Is feed reuse acceptable under Business Standard's terms for this personal use?
+- Is sending TOI headlines and descriptions to an LLM API within TOI's personal-use permission? It does not mention AI, so keep text minimal and revisit if the project grows beyond personal use.
 
 ## Possible later versions
 

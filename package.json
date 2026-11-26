@@ -2,7 +2,7 @@
   "name": "market-pulse",
   "version": "0.1.0",
   "private": true,
-  "description": "Hourly email alerts for Indian market-moving news from Business Standard",
+  "description": "Hourly email alerts for Indian market-moving news from Times of India",
   "type": "module",
   "engines": {
     "node": ">=20"

@@ -1,7 +1,6 @@
 export const DEFAULT_FEED_URLS: readonly string[] = [
-  'https://www.business-standard.com/rss/economy-102.rss',
-  'https://www.business-standard.com/rss/markets-106.rss',
-  'https://www.business-standard.com/rss/home_page_top_stories.rss',
+  'https://timesofindia.indiatimes.com/business/rssfeeds/1898055.cms',
+  'https://timesofindia.indiatimes.com/rssfeedstopstories.cms',
 ];
 
 export interface Config {
